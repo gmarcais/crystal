@@ -206,6 +206,47 @@ describe "Number" do
       iter.next.should eq(0.0)
     end
 
+    it "block wrong direction" do
+      s = 0
+      3.step(to: 1) { |x| s += x }
+      s.should eq(0)
+      s = 0
+      3.step(to: 5, by: -1) { |x| s += x }
+      s.should eq(0)
+    end
+
+    it "iterator wrong direction" do
+      3.step(to: 1).next.should be_a(Iterator::Stop)
+      3.step(to: 5, by: -1).next.should be_a(Iterator::Stop)
+    end
+
+    it "block version should not overflow" do
+      count = 0
+      (Int32::MAX - 5).step(by: 10, to: Int32::MAX) do |x|
+        x.should be >= Int32::MAX - 5
+        count += 1
+        count.should be <= 1
+      end
+
+      count = 0
+      (Int32::MIN + 5).step(by: -10, to: Int32::MIN) do |x|
+        x.should be <= Int32::MIN + 5
+        count += 1
+        count.should be <= 1
+      end
+    end
+
+    it "iterator should not overflow" do
+      up = (Int32::MAX - 15).step(by: 10, to: Int32::MAX)
+      up.next.should eq(Int32::MAX - 15)
+      up.next.should eq(Int32::MAX - 5)
+      up.next.should be_a(Iterator::Stop)
+      down = (Int32::MIN + 15).step(by: -10, to: Int32::MIN)
+      down.next.should eq(Int32::MIN + 15)
+      down.next.should eq(Int32::MIN + 5)
+      down.next.should be_a(Iterator::Stop)
+    end
+
     it "iterator without limit" do
       iter = 0.step
 

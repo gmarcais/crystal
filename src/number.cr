@@ -92,13 +92,22 @@ struct Number
 
     if to
       if by > 0
-        while x <= to
+        return self unless x <= to
+        limit = to - x
+        while true
           yield x
+          return self unless by <= limit
+          limit -= by
           x += by
         end
-      elsif by < 0
-        while x >= to
+      else
+        return self unless x >= to
+        limit = x - to
+        limit = to - x
+        while true
           yield x
+          return self unless -by <= limit
+          limit -= by
           x += by
         end
       end
@@ -262,31 +271,41 @@ struct Number
     @to : L
     @by : B
     @original : T
+    @done : Bool
 
     def initialize(@n : T, @to : L, @by : B)
       @original = @n
+      @done = if to = @to
+                !(@by > 0 ? @n <= to : @n >= to)
+              else
+                false
+              end
     end
 
     def next
+      return stop if @done
+      value = @n
       if to = @to
         if @by > 0
-          return stop if @n > to
-        elsif @by < 0
-          return stop if @n < to
+          @done = @by > (to - @n)
+          @n += @by unless @done
+        else
+          @done = @by.abs > (@n - to)
+          @n += @by unless @done
         end
-
-        value = @n
-        @n += @by
-        value
       else
-        value = @n
         @n += @by
-        value
       end
+      value
     end
 
     def rewind
       @n = @original
+      @done = if to = @to
+                !(@by > 0 ? @n <= to : @n >= to)
+              else
+                false
+              end
       self
     end
   end
